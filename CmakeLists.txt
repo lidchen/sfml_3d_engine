@@ -1,0 +1,11 @@
+# CMakeLists.txt for SFML 2.5.1
+cmake_minimum_required(VERSION 3.10)
+project(3d_engine)
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_PREFIX_PATH "/opt/homebrew/opt/sfml@2" ${CMAKE_PREFIX_PATH})
+
+find_package(SFML 2.6 COMPONENTS graphics window system REQUIRED)
+
+add_executable(sfml_game main.cpp variable.cpp my_la.cpp basic_type.cpp util_3d.cpp debug.cpp)
+target_link_libraries(sfml_game sfml-graphics sfml-window sfml-system)
