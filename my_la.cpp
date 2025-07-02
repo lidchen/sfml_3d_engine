@@ -14,11 +14,11 @@ Mat2::Mat2(float a, float b, float c, float d) : m_a(a), m_b(b), m_c(c), m_d(d) 
 Mat2::~Mat2() {
     std::cout << "Mat2[" << m_a << "," << m_b << "," << m_c << m_d << "] destructed\n";
 }
-Vec2 Mat2::operator*(const Vec2 &vec) {
-    float x = m_a * vec.x + m_b * vec.y;
-    float y = m_c * vec.x + m_d * vec.y;
-    return std::move(Vec2(x, y));
-}
+// Vec2 Mat2::operator*(const Vec2 &vec) {
+//     float x = m_a * vec.x + m_b * vec.y;
+//     float y = m_c * vec.x + m_d * vec.y;
+//     return std::move(Vec2(x, y));
+// }
 
 Vec3::Vec3() {}
 Vec3::Vec3(float x, float y, float z) : x(x), y(y), z(z) {}
@@ -177,6 +177,21 @@ Mat4::~Mat4() {
 std::string Mat4::to_string() const {
     std::ostringstream oss;
     for (int i = 0; i < 4; ++i) {
+        for (int j = 0; j < 4; ++j) {
+            oss << std::setw(6) << std::right << std::fixed << std::setprecision(3) << val[i][j] << " ";
+        }
+        oss << "\n";
+    }
+    return oss.str();
+}
+
+std::ostream& operator<< (std::ostream& os, Mat4 mat) {
+    return os << mat.to_string();
+}
+
+void Mat4::print() {
+    std::ostringstream oss;
+    for (int i = 0; i < 4; ++i) {
         if (i == 0) oss << "⎡";
         else if (i == 3) oss << "⎣";
         else oss << "⎜";
@@ -188,21 +203,7 @@ std::string Mat4::to_string() const {
         else oss << "⎟";
         oss << "\n";
     }
-    oss << "\n";
-    return oss.str();
-}
-std::ostream& operator<< (std::ostream& os, Mat4 mat) {
-    return os << mat.to_string();
-}
-
-void Mat4::print() {
-    for (int i = 0; i < 4; ++i) {
-        for (int j = 0; j < 4; ++j) {
-            std::cout << val[i][j] << " ";
-        }
-        std::cout << "\n";
-    }
-    std::cout << "\n";
+    std::cout << oss.str();
 }
 
 

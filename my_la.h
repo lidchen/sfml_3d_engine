@@ -4,6 +4,7 @@
 #include <iostream>
 #include <sstream>
 #include <iomanip>
+#include "debug.h"
 
 extern bool over;
 class Vec4;
@@ -12,7 +13,7 @@ class Vec4;
 // Implement this using Template
 // https://chatgpt.com/c/685617f8-3508-8011-a2a8-d0c1a160dc35
 
-class Vec {
+class Vec : public Debugable{
 public:
     virtual ~Vec() = 0;
     Vec operator* (const Vec &vec);
@@ -23,7 +24,7 @@ public:
     void print();
 };
 
-class Mat {
+class Mat : public Debugable{
 public:
     virtual ~Mat() = 0;
     Mat operator* (const Mat &mat);
@@ -54,7 +55,7 @@ private:
     float m_d = 0;
 };
 
-class Vec3 : public Vec{
+class Vec3 : public Vec {
 public:
     float x, y, z;
     Vec3();
@@ -71,19 +72,19 @@ public:
     bool operator==(const Vec3 &v) const;
     float length() const;
     void print() const;
-    std::string to_string() const;
+    std::string to_string() const override;
     friend std::ostream& operator<< (std::ostream& os, Vec3 vec);
     Vec4 to_vec4() const;
     ~Vec3();
 };
 
-class Vec4 : public Vec{
+class Vec4 : public Vec {
 public:
     Vec4();
     Vec4(float a, float b, float c, float d);
     ~Vec4();
     Vec3 to_vec3() const;
-    std::string to_string() const;
+    std::string to_string() const override;
     friend std::ostream& operator<< (std::ostream& os, Vec4 vec);
     void print() const;
     float x = 0;
@@ -92,7 +93,7 @@ public:
     float w = 0;
 };
 
-class Mat4 : public Mat{
+class Mat4 : public Mat {
 public:
     float val[4][4];
     Mat4 ();
@@ -106,7 +107,7 @@ public:
     Vec4 operator* (const Vec4& vec);
     Mat4 operator* (const Mat4& mat);
 
-    std::string to_string() const;
+    std::string to_string() const override;
     friend std::ostream& operator<< (std::ostream& os, Mat4 vec);
     void print();
 };

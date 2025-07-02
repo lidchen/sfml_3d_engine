@@ -1,9 +1,22 @@
 #include "variable.h"
 
+bool isKeyPressedOnce(sf::Keyboard::Key key) {
+    static std::unordered_map<sf::Keyboard::Key, bool> wasPressed;
+    bool currentlyPressed = sf::Keyboard::isKeyPressed(key);
+    bool pressedOnce = currentlyPressed && !wasPressed[key];
+    wasPressed[key] = currentlyPressed;
+    return pressedOnce;
+}
+
 void input_handle(float dt) {
     float move_speed = k_move_speed;
     if (over || sf::Keyboard::isKeyPressed(sf::Keyboard::Q) || sf::Keyboard::isKeyPressed(sf::Keyboard::Escape)) {
         window.close();
+    }
+    if (isKeyPressedOnce(sf::Keyboard::U)) {
+        debug_view_on = !debug_view_on;
+        if (debug_view_on) std::cout << "debug view on\n";
+        else std::cout << "debug view off\n";
     }
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::LShift)) {
         move_speed *= 3;

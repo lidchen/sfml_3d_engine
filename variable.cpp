@@ -1,4 +1,5 @@
 #include "variable.h"
+bool debug_view_on = false;
 bool over = false;
 bool enable_debug_line = false;
 bool enable_rotation = true;
@@ -8,7 +9,7 @@ sf::Text debug_text;
 
 const float k_move_speed = 2.f;
 const float k_rotation_speed = 3.f;
-const std::string k_model_path = "../res/obj/monkey2.obj";
+const std::string k_model_path = "../res/obj/monkey.obj";
 
 float fov = 60.f;
 float w = screenX;
@@ -22,6 +23,8 @@ float fov_radius = 1.0f / tanf(fov * 0.5f / 180.f * M_PI);
 float t = tanf(fov_radius) * n;
 float r = t * aspect_ratio;
 float offset = 0.1f;
+float fps;
+float dt;
 
 Vec3 light_dir(0.f, 0.f, -1.f);
 

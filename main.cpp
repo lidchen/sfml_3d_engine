@@ -277,9 +277,6 @@ bool setup() {
         return 0;
     }
 
-    debug_text.setFont(Alkhemikal);
-    debug_text.setPosition(0, 0);
-    debug_text.setCharacterSize(24);
     return 1;
 }
 
@@ -296,6 +293,10 @@ int main() {
         std::cout << Vec3(1.f, 1.f, 1.f) << "\n";
         std::cout << projection_mat;
         debug::console.log("hello");
+        debug::ui.register_var("camera_vec", &camera_vec);
+        debug::ui.register_var("camera_dir", &camera_dir);
+        debug::ui.register_var("projection mat", &projection_mat);
+        debug::ui.register_var("fps", &fps);
     }
 
     Vec3 up(0, 1, 0);
@@ -313,9 +314,8 @@ int main() {
 
         while (window.isOpen()) {
             sf::Event event;
-            float dt = clock.restart().asSeconds();
-            float fps = (dt > 0.0f) ? (1.f / dt) : 0.0f;
-            debug_text.setString(std::to_string(static_cast<int>(fps)));
+            dt = clock.restart().asSeconds();
+            fps = (dt > 0.0f) ? (1.f / dt) : 0.0f;
             input_handle(dt);
             while (window.pollEvent(event)) {
                 if (event.type == sf::Event::Closed)
@@ -374,7 +374,7 @@ int main() {
 
             center_new = (view_mat * center.to_vec4()).to_vec3();
             // tri_clipping(viewed_tris);
-            // obj_clipping(viewed_tris, center_new, radius);
+            obj_clipping(viewed_tris, center_new, radius);
 
             for (auto tri_viewed : viewed_tris) {
                 Triangle tri_projected;
@@ -399,14 +399,11 @@ int main() {
                 });
 
             for (auto tri: projected_tris) {
-                // std::cout << "Projected_tris:\n";
-                // tri.print();
-                // tri.print();
                 draw_tri(tri);
             }
-            window.draw(debug_text);
-            debug::ui.log("hello");
-            debug::ui.draw();
+            if (debug_view_on) {
+                debug::ui.draw(); 
+            }
             window.display();
         }
     }

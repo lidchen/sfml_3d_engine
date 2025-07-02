@@ -128,7 +128,7 @@ float signed_distance_plane_point(const Vec3& plane_n, const Vec3& plane_p, cons
     return (point - plane_p).dot_product(plane_n);
 }
 
-void rotate_vec2(float rad, Vec2& vec) {
-    Mat2 rotate_mat(cos(rad), -sin(rad), sin(rad), cos(rad));
-    vec = std::move(rotate_mat * vec);
-}
+// void rotate_vec2(float rad, Vec2& vec) {
+//     Mat2 rotate_mat(cos(rad), -sin(rad), sin(rad), cos(rad));
+//     vec = std::move(rotate_mat * vec);
+// }

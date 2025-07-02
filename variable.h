@@ -6,6 +6,7 @@
 
 #define screenX 800
 #define screenY 600
+extern bool debug_view_on;
 extern bool over;
 extern bool enable_debug_line;
 extern bool enable_rotation;
@@ -28,7 +29,8 @@ extern float fov_radius;
 extern float t;
 extern float r;
 extern float offset;
-
+extern float fps;
+extern float dt;
 
 extern Mat4 projection_mat;
 extern Mat4 camera_mat;
