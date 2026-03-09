@@ -1,17 +1,21 @@
 #include "variable.h"
-bool debug_view_on = false;
 bool over = false;
+bool debug_view_on = true;
 bool enable_debug_line = false;
-bool enable_rotation = true;
+bool enable_rotation = false;
+bool enable_mouse_release = true;
 sf::RenderWindow window(sf::VideoMode(screenX, screenY), "3d_engine");
 sf::Font Alkhemikal;
 sf::Text debug_text;
 
-const float k_move_speed = 2.f;
+const float k_move_speed = 5.f;
 const float k_rotation_speed = 3.f;
-const std::string k_model_path = "../res/obj/monkey.obj";
+const std::string k_model_path = "../res/obj/mountains.obj";
+const float k_mouse_sensitivity = 0.003f;
 
-float fov = 60.f;
+int tri_num;
+
+float fov = 55.f;
 float w = screenX;
 float h = screenY;
 float f = 1000.f;
@@ -26,7 +30,8 @@ float offset = 0.1f;
 float fps;
 float dt;
 
-Vec3 light_dir(0.f, 0.f, -1.f);
+// Vec3 light_dir(0.f, 0.f, -1.f);
+Vec3 light_dir(0.f, 1.f, 0.f);
 
 // Transform to NDC(Normailzed Device Coordinates)
 Mat4 projection_mat(
@@ -45,8 +50,11 @@ Mat4 view_mat;
 //     0, 0, 0, 1.f
 // );
 
-Vec3 camera_vec(0.f, 0.f, -3.f);
-Vec3 camera_dir(0.f, 0.f, 1.f); // Along z-axis
+Vec3 world_up(0, 1, 0);
+Vec3 camera_dir(0.f, 0.f, -1.f); // Along z-axis
+Vec3 camera_vec(-10.f, 5.f, 30.f); 
+Vec3 camera_right = (rotation_matrix(Vec3(0.f, -1.f, 0.f), M_PI / 2) * camera_dir.to_vec4()).to_vec3().normalize();
+Vec3 camera_up = -camera_dir.cross_product(camera_right).normalize();
 
 Mesh mesh_cube;
 // Mesh tri_for_test(

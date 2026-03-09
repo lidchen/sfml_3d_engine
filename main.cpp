@@ -1,6 +1,4 @@
 // TODO:
-// Debug GUI
-// mouse rotation
 // camera edge clipping
 // point light
 // light trace
@@ -8,10 +6,11 @@
 
 #include <SFML/Graphics.hpp>
 #include <iostream>
+#include <zmq.hpp>
 #include "variable.h"
 #include "basic_type.h"
 #include "util_3d.h"
-#include "input_handle.hpp"
+#include "input_handle.h"
 #include "debug.h"
 
 void draw_vec2(const Vec2& vec) {
@@ -71,90 +70,6 @@ void draw_tri(const Triangle t) {
     }
 }
 
-void draw_camera_near() {
-    // Draw the camera's near plane as a semi-transparent quad
-    // Use camera_dir (normal), camera_vec (camera position), and n (plane distance)
-    Vec3 plane_n = camera_dir.normalize();
-    float plane_d = n;
-
-    // Find two orthogonal vectors to plane_n
-    Vec3 up(0, 1, 0);
-    Vec3 right = plane_n.cross_product(up);
-    if (right.length() < 1e-3f) {
-        up = Vec3(1, 0, 0);
-        right = plane_n.cross_product(up);
-    }
-    right = right.normalize();
-    up = right.cross_product(plane_n).normalize();
-
-    // Center of the near plane in world space
-    Vec3 center = camera_vec + plane_n * plane_d;
-
-    float plane_size = 0.04; // Adjust for visual size
-
-    // Four corners in world space
-    Vec3 corners[4];
-    corners[0] = center + right * plane_size + up * plane_size;
-    corners[1] = center - right * plane_size + up * plane_size;
-    corners[2] = center - right * plane_size - up * plane_size;
-    corners[3] = center + right * plane_size - up * plane_size;
-
-    // Transform to view space, then project to screen
-    sf::VertexArray quad(sf::Quads, 4);
-    for (int i = 0; i < 4; ++i) {
-        Vec3 view_space = (view_mat * corners[i].to_vec4()).to_vec3();
-        Vec3 projected = (projection_mat * view_space.to_vec4()).to_vec3();
-        quad[i].position = sf::Vector2f(
-            projected.x * 3000.f + screenX / 2,
-            projected.y * 3000.f + screenY / 2
-        );
-        quad[i].color = sf::Color(255, 0, 0, 100); // Red, semi-transparent
-    }
-    window.draw(quad);
-}
-
-void draw_plane(const Vec3& plane_n, float plane_d) {
-    // Draw a large quad representing the near plane in view space
-    // Assume plane_n is normalized
-
-    // Find two vectors orthogonal to plane_n to define the plane
-    Vec3 up(0, 1, 0);
-    Vec3 right = plane_n.cross_product(up);
-    if (right.length() < 1e-3f) {
-        // If plane_n is parallel to up, use another vector
-        up = Vec3(1, 0, 0);
-        right = plane_n.cross_product(up);
-    }
-    right = right.normalize();
-    up = right.cross_product(plane_n).normalize();
-
-    // Center of the plane in view space
-    // Vec3 center = plane_n * (plane_d);
-    Vec3 center = plane_n - plane_d;
-
-    // Size of the plane (make it large enough to cover the screen)
-    float plane_size = 1.0f; // Adjust as needed
-
-    // Four corners of the plane
-    Vec3 corners[4];
-    corners[0] = center + right * plane_size + up * plane_size;
-    corners[1] = center - right * plane_size + up * plane_size;
-    corners[2] = center - right * plane_size - up * plane_size;
-    corners[3] = center + right * plane_size - up * plane_size;
-
-    // Project corners to screen
-    sf::VertexArray quad(sf::Quads, 4);
-    for (int i = 0; i < 4; ++i) {
-        Vec3 projected = (projection_mat * (view_mat * corners[i].to_vec4())).to_vec3();
-        quad[i].position = sf::Vector2f(
-            projected.x * 3000.f + screenX / 2,
-            projected.y * 3000.f + screenY / 2
-        );
-        quad[i].color = sf::Color(0, 0, 255, 100); // Blue, semi-transparent
-    }
-    window.draw(quad);
-}
-
 void tri_clipping(std::vector<Triangle>& tris) {
 // for test
 // n = 4.f;
@@ -206,7 +121,6 @@ void tri_clipping(std::vector<Triangle>& tris) {
         }
         if (inside_points.size() == 1 && outside_points.size() == 2) {
             // One point inside, two outside: form one new triangle
-            // std::cout << "ONE INSIDE\n";
             Vec3 A = inside_points[0];
             Vec3 B = outside_points[0];
             Vec3 C = outside_points[1];
@@ -215,12 +129,10 @@ void tri_clipping(std::vector<Triangle>& tris) {
             Triangle new_tri = Triangle(A, clipped_C, clipped_B);
             new_tri.light_strength = tri.light_strength;
             clipped_tris.emplace_back(new_tri);
-            // clipped_tris.emplace_back(Triangle(A, clipped_C, clipped_B));
             continue;
         }
         if (inside_points.size() == 2 && outside_points.size() == 1) {
             // Two points inside, one outside: form two new triangles
-            // std::cout << "TWO INSIDE\n";
             Vec3 A = inside_points[0];
             Vec3 B = inside_points[1];
             Vec3 C = outside_points[0];
@@ -230,23 +142,19 @@ void tri_clipping(std::vector<Triangle>& tris) {
             Triangle new_tri2 = Triangle(B, clipped_B, clipped_A);
             new_tri1.light_strength = tri.light_strength;
             new_tri2.light_strength = tri.light_strength;
-            // clipped_tris.emplace_back(Triangle(A, B, clipped_A));
-            // clipped_tris.emplace_back(Triangle(B, clipped_B, clipped_A));
             clipped_tris.emplace_back(new_tri1);
             clipped_tris.emplace_back(new_tri2);
             continue;
         }
     }
-    // std::cout << "Tri num: " << clipped_tris.size() << "\n";
-    // std::cout << "================================\n";
     tris = clipped_tris;
+    tri_num = tris.size();
 }
 
 void obj_clipping(std::vector<Triangle>&tris, const Vec3& center, float radius){
     // Cal distance d to clipping face
     // camera_dir and n(near face) define the face
     // dot(a, b) = |a||b|cos(theta)
-    camera_dir = camera_dir.normalize();
     // Calculate distance from camera to object's center along camera_dir
     // float d = n + (center - camera_vec).dot_product(camera_dir);
     float d = signed_distance_plane_point(Vec3(0.f, 0.f, 1.f), Vec3(0.f, 0.f, n), center);
@@ -276,43 +184,64 @@ bool setup() {
         std::cerr << "Cant load font\n";
         return 0;
     }
+    debug::console.log("debug console output");
+    debug::ui.register_var("camera_vec", &camera_vec);
+    debug::ui.register_var("camera_dir", &camera_dir);
+    debug::ui.register_var("camera_right", &camera_right);
+    debug::ui.register_var("camera_up", &camera_up);
+    debug::ui.register_var("fps", &fps);
+    debug::ui.register_var("tri num", &tri_num);
 
     return 1;
 }
 
 int main() {
+  // start zmq service
+    std::cout << "start recving";
+    std::flush(std::cout);
+    zmq::context_t ctx;
+    zmq::socket_t sock(ctx, ZMQ_SUB);
+    sock.connect("tcp://127.0.0.1:5555");
+    sock.setsockopt(ZMQ_SUBSCRIBE, "", 0);
+
     float radius;
     Vec3 center;
     if (!setup()) {
         return 0;
     }
-// for test
-// mesh_cube = tri_for_test;
-    // TEST
-    if (1) {
-        std::cout << Vec3(1.f, 1.f, 1.f) << "\n";
-        std::cout << projection_mat;
-        debug::console.log("hello");
-        debug::ui.register_var("camera_vec", &camera_vec);
-        debug::ui.register_var("camera_dir", &camera_dir);
-        debug::ui.register_var("projection mat", &projection_mat);
-        debug::ui.register_var("fps", &fps);
-    }
 
-    Vec3 up(0, 1, 0);
+    Button button("debug_line", sf::Vector2f(screenX - 100.f, 100.f), enable_debug_line);
     Vec3 target = camera_vec + camera_dir;
-    camera_mat = pointat_matrix(camera_vec, target, up);
+    camera_mat = pointat_matrix(camera_vec, target, world_up);
     view_mat = quick_inverse_matrix(camera_mat);
     if (1) {
-        window.setFramerateLimit(240);
+        // window.setFramerateLimit(240);
         sf::Clock clock;
         float theta = 0;
         Vec3 rotation_point = Vec3(1.f, 0.f, 1.f).normalize();
-        sf::Vector2i last_mouse_pos= sf::Mouse::getPosition();
         cal_circle_info(mesh_cube.tris_to_raster, center, radius);
         Vec3 center_new = center;
-
+        float gaze_x_prev = 0;
+        float gaze_y_prev = 0;
+        float gaze_z_prev = 0;
         while (window.isOpen()) {
+            // zmq_receive data
+            zmq::message_t msg;
+            if (sock.recv(msg, zmq::recv_flags::dontwait)) {
+              float* gaze = (float*)(msg.data());
+              
+              float gaze_diff_x = gaze_x_prev - gaze[0];
+              float gaze_diff_y = gaze_y_prev - gaze[1];
+              float gaze_diff_z = gaze_z_prev - gaze[2];
+              std::cout << gaze_diff_x << "\t";
+              std::cout << gaze_diff_y << "\t";
+              std::cout << gaze_diff_z << "\t";
+              gaze_handle(gaze_diff_x, gaze_diff_y, gaze_diff_z);
+
+              gaze_x_prev = gaze[0];
+              gaze_y_prev = gaze[1];
+              gaze_z_prev = gaze[2];
+            } else {} // no data yet, continue engine loop }
             sf::Event event;
             dt = clock.restart().asSeconds();
             fps = (dt > 0.0f) ? (1.f / dt) : 0.0f;
@@ -329,7 +258,7 @@ int main() {
             std::vector<Triangle> projected_tris;
 
             target = camera_vec + camera_dir;
-            camera_mat = pointat_matrix(camera_vec, target, up);
+            camera_mat = pointat_matrix(camera_vec, target, world_up);
             view_mat = quick_inverse_matrix(camera_mat);
 
             for (auto tri : mesh_cube.tris_to_raster) {
@@ -376,6 +305,7 @@ int main() {
             // tri_clipping(viewed_tris);
             obj_clipping(viewed_tris, center_new, radius);
 
+            // Projection part we need to fuck with
             for (auto tri_viewed : viewed_tris) {
                 Triangle tri_projected;
                 // Project triangles from 3D --> 2D
@@ -403,7 +333,13 @@ int main() {
             }
             if (debug_view_on) {
                 debug::ui.draw(); 
+                enable_mouse_release = false;
             }
+            else {
+                enable_mouse_release = true;
+            }
+            button.update();
+            button.draw();
             window.display();
         }
     }

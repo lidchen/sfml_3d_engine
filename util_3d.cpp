@@ -132,3 +132,87 @@ float signed_distance_plane_point(const Vec3& plane_n, const Vec3& plane_p, cons
 //     Mat2 rotate_mat(cos(rad), -sin(rad), sin(rad), cos(rad));
 //     vec = std::move(rotate_mat * vec);
 // }
+
+// void draw_camera_near() {
+//     // Draw the camera's near plane as a semi-transparent quad
+//     // Use camera_dir (normal), camera_vec (camera position), and n (plane distance)
+//     Vec3 plane_n = camera_dir.normalize();
+//     float plane_d = n;
+
+//     // Find two orthogonal vectors to plane_n
+//     Vec3 up(0, 1, 0);
+//     Vec3 right = plane_n.cross_product(up);
+//     if (right.length() < 1e-3f) {
+//         up = Vec3(1, 0, 0);
+//         right = plane_n.cross_product(up);
+//     }
+//     right = right.normalize();
+//     up = right.cross_product(plane_n).normalize();
+
+//     // Center of the near plane in world space
+//     Vec3 center = camera_vec + plane_n * plane_d;
+
+//     float plane_size = 0.04; // Adjust for visual size
+
+//     // Four corners in world space
+//     Vec3 corners[4];
+//     corners[0] = center + right * plane_size + up * plane_size;
+//     corners[1] = center - right * plane_size + up * plane_size;
+//     corners[2] = center - right * plane_size - up * plane_size;
+//     corners[3] = center + right * plane_size - up * plane_size;
+
+//     // Transform to view space, then project to screen
+//     sf::VertexArray quad(sf::Quads, 4);
+//     for (int i = 0; i < 4; ++i) {
+//         Vec3 view_space = (view_mat * corners[i].to_vec4()).to_vec3();
+//         Vec3 projected = (projection_mat * view_space.to_vec4()).to_vec3();
+//         quad[i].position = sf::Vector2f(
+//             projected.x * 3000.f + screenX / 2,
+//             projected.y * 3000.f + screenY / 2
+//         );
+//         quad[i].color = sf::Color(255, 0, 0, 100); // Red, semi-transparent
+//     }
+//     window.draw(quad);
+// }
+
+// void draw_plane(const Vec3& plane_n, float plane_d) {
+//     // Draw a large quad representing the near plane in view space
+//     // Assume plane_n is normalized
+
+//     // Find two vectors orthogonal to plane_n to define the plane
+//     Vec3 up(0, 1, 0);
+//     Vec3 right = plane_n.cross_product(up);
+//     if (right.length() < 1e-3f) {
+//         // If plane_n is parallel to up, use another vector
+//         up = Vec3(1, 0, 0);
+//         right = plane_n.cross_product(up);
+//     }
+//     right = right.normalize();
+//     up = right.cross_product(plane_n).normalize();
+
+//     // Center of the plane in view space
+//     // Vec3 center = plane_n * (plane_d);
+//     Vec3 center = plane_n - plane_d;
+
+//     // Size of the plane (make it large enough to cover the screen)
+//     float plane_size = 1.0f; // Adjust as needed
+
+//     // Four corners of the plane
+//     Vec3 corners[4];
+//     corners[0] = center + right * plane_size + up * plane_size;
+//     corners[1] = center - right * plane_size + up * plane_size;
+//     corners[2] = center - right * plane_size - up * plane_size;
+//     corners[3] = center + right * plane_size - up * plane_size;
+
+//     // Project corners to screen
+//     sf::VertexArray quad(sf::Quads, 4);
+//     for (int i = 0; i < 4; ++i) {
+//         Vec3 projected = (projection_mat * (view_mat * corners[i].to_vec4())).to_vec3();
+//         quad[i].position = sf::Vector2f(
+//             projected.x * 3000.f + screenX / 2,
+//             projected.y * 3000.f + screenY / 2
+//         );
+//         quad[i].color = sf::Color(0, 0, 255, 100); // Blue, semi-transparent
+//     }
+//     window.draw(quad);
+// }
