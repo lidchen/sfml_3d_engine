@@ -1,7 +1,12 @@
 # sfml_3d_engine
 
-A lightweight software 3D engine built with C++17 and SFML, focused on learning core real-time rendering concepts without relying on OpenGL/DirectX.  
-It loads a triangle mesh from an `.obj` file, transforms it with a movable camera, and rasterizes shaded triangles directly through SFML draw calls.
+A lightweight software-based 3D engine written in C++17 using SFML, designed for learning and demonstrating core real-time rendering concepts without relying on hardware-accelerated APIs such as OpenGL.
+
+The engine loads triangle mesh data from .obj files, applies geometric transformations via a movable camera system, and performs software rasterization of shaded triangles using SFML rendering primitives.
+
+The project is currently under active development. A ZeroMQ-based communication layer has been introduced to enable external data streaming for camera control and scene interaction, supporting integration with computer vision pipelines such as OpenCV.
+
+Future development plans include a face-tracking module that enables off-axis projection, allowing the simulation of a pseudo-3D visual effect driven by real-time user head pose estimation.
 
 ## Why this project is interesting
 
@@ -12,7 +17,7 @@ It loads a triangle mesh from an `.obj` file, transforms it with a movable camer
 
 ## Graphics render mechanism
 
-The frame pipeline is implemented in `main.cpp` and follows this flow:
+The frame pipeline is implemented as this flow:
 
 1. **Mesh input**: load triangles from an OBJ model (`Mesh::load_from_obj`).
 2. **World transform**: optional rotation and object-space updates.
